@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe Master</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #50c878;
+            --background-color: #0f1020;
+            --cell-color: #1e2040;
+            --text-color: #e94560;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--background-color);
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Приветственный экран */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        #welcome-screen.hidden {
+            opacity: 0;
+            transform: scale(1.2);
+            pointer-events: none;
+        }
+
+        #welcome-logo {
+            font-size: 3rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(74,144,226,0.7);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        #developer-name {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-container {
+            background: rgba(30, 32, 64, 0.8);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            border: 2px solid rgba(74,144,226,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            background: var(--cell-color);
+            color: white;
+            border: 2px solid var(--primary-color);
+            padding: 12px 25px;
+            margin: 0 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .mode-btn.active {
+            background: var(--primary-color);
+            box-shadow: 0 0 15px rgba(74,144,226,0.5);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 15px;
+            margin: 30px 0;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: var(--cell-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            border: 2px solid rgba(74,144,226,0.3);
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            background: rgba(30, 32, 64, 0.9);
+            box-shadow: 0 0 20px rgba(74,144,226,0.3);
+        }
+
+        .cell.winner {
+            animation: winnerPulse 0.5s infinite alternate;
+        }
+
+        @keyframes winnerPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        #status {
+            margin: 20px 0;
+            font-weight: bold;
+            color: var(--secondary-color);
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: var(--secondary-color);
+            box-shadow: 0 0 20px rgba(80,200,120,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Приветственный экран -->
+    <div id="welcome-screen">
+        <div id="welcome-logo">Tic Tac Toe Master</div>
+        <div id="developer-name">Fuitec Software</div>
+    </div>
+
+    <div class="game-container">
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setGameMode('ai')">vs AI</button>
+            <button class="mode-btn" onclick="setGameMode('local')">2 Players</button>
+        </div>
+        <h1>Tic Tac Toe Master</h1>
+        <div id="status">Выберите режим игры</div>
+        <div class="game-board" id="board"></div>
+        <button class="btn" onclick="resetGame()">Новая игра</button>
+    </div>
+
+    <script>
+            // Скрытие приветственного экрана
+        document.addEventListener('DOMContentLoaded', () => {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            setTimeout(() => {
+                welcomeScreen.classList.add('hidden');
+            }, 3000);
+        });
+
+        class TicTacToe {
+            constructor(mode = 'ai') {
+                this.board = Array(9).fill(null);
+                this.currentPlayer = 'X';
+                this.gameOver = false;
+                this.mode = mode;
+                this.renderBoard();
+            }
+
+            renderBoard() {
+                const boardElement = document.getElementById('board');
+                boardElement.innerHTML = '';
+                this.board.forEach((cell, index) => {
+                    const cellElement = document.createElement('div');
+                    cellElement.classList.add('cell');
+                    cellElement.textContent = cell || '';
+                    cellElement.dataset.index = index;
+                    cellElement.addEventListener('click', () => this.makeMove(index));
+                    boardElement.appendChild(cellElement);
+                });
+            }
+
+            makeMove(index) {
+                if (this.board[index] || this.gameOver) return;
+
+                this.board[index] = this.currentPlayer;
+                this.renderBoard();
+
+                if (this.checkWinner()) {
+                    this.handleWin();
+                    return;
+                }
+
+                if (this.board.every(cell => cell !== null)) {
+                    this.handleDraw();
+                    return;
+                }
+
+                this.switchPlayer();
+            }
+
+            switchPlayer() {
+                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                
+                if (this.mode === 'ai' && this.currentPlayer === 'O') {
+                    setTimeout(() => this.aiMove(), 500);
+                }
+
+                this.updateStatus();
+            }
+
+            handleWin() {
+                const winningPlayer = this.currentPlayer;
+                document.getElementById('status').textContent = `${winningPlayer} победил!`;
+                this.gameOver = true;
+                this.highlightWinningCells();
+                this.celebrateWin();
+                this.saveGameStats(winningPlayer);
+            }
+
+            handleDraw() {
+                document.getElementById('status').textContent = 'Ничья!';
+                this.gameOver = true;
+                this.saveGameStats('draw');
+            }
+
+            highlightWinningCells() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Строки
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Столбцы
+                    [0, 4, 8], [2, 4, 6] // Диагонали
+                ];
+
+                for (let pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (this.board[a] && 
+                        this.board[a] === this.board[b] && 
+                        this.board[a] === this.board[c]) {
+                        
+                        pattern.forEach(index => {
+                            const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                            cell.classList.add('winner');
+                        });
+                        break;
+                    }
+                }
+            }
+
+            aiMove() {
+                const availableMoves = this.board.reduce((acc, cell, index) => {
+                    if (cell === null) acc.push(index);
+                    return acc;
+                }, []);
+
+                const bestMove = this.findBestMove(availableMoves);
+                this.makeMove(bestMove);
+            }
+
+            findBestMove(availableMoves) {
+                // Улучшенный алгоритм выбора хода с минимаксом
+                const testMove = (move, player) => {
+                    this.board[move] = player;
+                    const isWinner = this.checkWinnerForPlayer(player);
+                    this.board[move] = null;
+                    return isWinner;
+                };
+
+                // Попытка выиграть
+                for (let move of availableMoves) {
+                    if (testMove(move, 'O')) return move;
+                }
+
+                // Блокировка победы противника
+                for (let move of availableMoves) {
+                    if (testMove(move, 'X')) return move;
+                }
+
+                // Выбор центра, если возможно
+                if (availableMoves.includes(4)) return 4;
+
+                // Случайный ход
+                return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            }
+
+            checkWinnerForPlayer(player) {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Строки
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Столбцы
+                    [0, 4, 8], [2, 4, 6] // Диагонали
+                ];
+
+                return winPatterns.some(pattern => 
+                    pattern.every(index => this.board[index] === player)
+                );
+            }
+
+            checkWinner() {
+                return this.checkWinnerForPlayer(this.currentPlayer);
+            }
+
+            updateStatus() {
+                const statusElement = document.getElementById('status');
+                if (this.mode === 'local') {
+                    statusElement.textContent = `Ход игрока ${this.currentPlayer}`;
+                } else if (this.mode === 'ai' && this.currentPlayer === 'O') {
+                    statusElement.textContent = 'Ход компьютера';
+                } else {
+                    statusElement.textContent = 'Ваш ход';
+                }
+            }
+
+            celebrateWin() {
+                this.createFireworkAnimation();
+                this.playWinSound();
+            }
+
+            createFireworkAnimation() {
+                const canvas = document.createElement('canvas');
+                canvas.style.position = 'fixed';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.pointerEvents = 'none';
+                canvas.style.zIndex = '1000';
+                document.body.appendChild(canvas);
+
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                const particles = [];
+
+                function createParticles(x, y) {
+                    const particleCount = 50;
+                    for (let i = 0; i < particleCount; i++) {
+                        particles.push({
+                            x: x,
+                            y: y,
+                            radius: Math.random() * 5 + 2,
+                            color: `hsl(${Math.random() * 360}, 50%, 50%)`,
+                            speedX: (Math.random() - 0.5) * 10,
+                            speedY: (Math.random() - 0.5) * 10,
+                            alpha: 1
+                        });
+                    }
+                }
+
+                function animateParticles() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    particles.forEach((particle, index) => {
+                        particle.x += particle.speedX;
+                        particle.y += particle.speedY;
+                        particle.alpha -= 0.02;
+
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+                        ctx.fill();
+
+                                               if (particle.alpha <= 0) {
+                            particles.splice(index, 1);
+                        }
+                    });
+
+                    if (particles.length > 0) {
+                        requestAnimationFrame(animateParticles);
+                    } else {
+                        document.body.removeChild(canvas);
+                    }
+                }
+
+                createParticles(window.innerWidth / 2, window.innerHeight / 2);
+                animateParticles();
+            }
+
+            playWinSound() {
+                try {
+                    const audio = new Audio('win-sound.mp3');
+                    audio.play().catch(error => {
+                        console.warn('Не удалось воспроизвести звук:', error);
+                    });
+                } catch (error) {
+                    console.warn('Ошибка создания аудио:', error);
+                }
+            }
+
+            saveGameStats(result) {
+                try {
+                    const stats = JSON.parse(localStorage.getItem('ticTacToeStats') || '{}');
+                    stats[result] = (stats[result] || 0) + 1;
+                    localStorage.setItem('ticTacToeStats', JSON.stringify(stats));
+                } catch (error) {
+                    console.warn('Ошибка сохранения статистики:', error);
+                }
+            }
+        }
+
+        let game;
+
+        function setGameMode(mode) {
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            resetGame(mode);
+        }
+
+        function resetGame(mode = 'ai') {
+            game = new TicTacToe(mode);
+            const statusElement = document.getElementById('status');
+            
+            if (mode === 'ai') {
+                statusElement.textContent = 'Ваш ход против ИИ';
+            } else {
+                statusElement.textContent = 'Ход игрока X';
+            }
+        }
+
+        // Обработка клавиш
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                resetGame(game ? game.mode : 'ai');
+            }
+        });
+
+        // Инициализация игры при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            
+            // Анимация исчезания приветственного экрана
+            setTimeout(() => {
+                welcomeScreen.classList.add('hidden');
+                
+                // Инициализация игры после исчезания экрана
+                setTimeout(() => {
+                    resetGame('ai');
+                }, 1000);
+            }, 3000);
+
+            // Добавляем обработчик изменения размера окна для адаптивности
+            window.addEventListener('resize', () => {
+                if (game) {
+                    game.renderBoard();
+                }
+            });
+        });
+
+        // Функция для отображения статистики игр
+        function showGameStats() {
+            try {
+                const stats = JSON.parse(localStorage.getItem('ticTacToeStats') || '{}');
+                const statsModal = document.createElement('div');
+                statsModal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(30, 32, 64, 0.9);
+                    padding: 20px;
+                    border-radius: 20px;
+                    z-index: 1000;
+                    text-align: center;
+                    backdrop-filter: blur(10px);
+                `;
+
+                statsModal.innerHTML = `
+                    <h2>Статистика игр</h2>
+                    <p>Победы X: ${stats['X'] || 0}</p>
+                    <p>Победы O: ${stats['O'] || 0}</p>
+                    <p>Ничьи: ${stats['draw'] || 0}</p>
+                    <button onclick="this.parentElement.remove()">Закрыть</button>
+                `;
+
+                document.body.appendChild(statsModal);
+            } catch (error) {
+                console.warn('Ошибка отображения статистики:', error);
+            }
+        }
+    </script>
+</body>
+</html>
