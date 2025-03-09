@@ -1,528 +1,321 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Tic Tac Toe Master</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #50c878;
-            --background-color: #0f1020;
-            --cell-color: #1e2040;
-            --text-color: #e94560;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: var(--background-color);
-            color: white;
-            overflow: hidden;
-        }
-
-        /* Приветственный экран */
-        #welcome-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--background-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 1;
-            transition: opacity 1s ease, transform 1s ease;
-        }
-
-        #welcome-screen.hidden {
-            opacity: 0;
-            transform: scale(1.2);
-            pointer-events: none;
-        }
-
-        #welcome-logo {
-            font-size: 3rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 20px rgba(74,144,226,0.7);
-            margin-bottom: 20px;
-            animation: pulse 2s infinite alternate;
-        }
-
-        #developer-name {
-            font-size: 1.5rem;
-            color: var(--secondary-color);
-            opacity: 0;
-            animation: fadeIn 2s forwards;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .game-container {
-            background: rgba(30, 32, 64, 0.8);
-            border-radius: 30px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-            border: 2px solid rgba(74,144,226,0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .mode-selector {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .mode-btn {
-            background: var(--cell-color);
-            color: white;
-            border: 2px solid var(--primary-color);
-            padding: 12px 25px;
-            margin: 0 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .mode-btn.active {
-            background: var(--primary-color);
-            box-shadow: 0 0 15px rgba(74,144,226,0.5);
-        }
-
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-gap: 15px;
-            margin: 30px 0;
-        }
-
-        .cell {
-            width: 100px;
-            height: 100px;
-            background: var(--cell-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 60px;
-            color: var(--text-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 20px;
-            border: 2px solid rgba(74,144,226,0.3);
-        }
-
-        .cell:hover {
-            transform: scale(1.05);
-            background: rgba(30, 32, 64, 0.9);
-            box-shadow: 0 0 20px rgba(74,144,226,0.3);
-        }
-
-        .cell.winner {
-            animation: winnerPulse 0.5s infinite alternate;
-        }
-
-        @keyframes winnerPulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        #status {
-            margin: 20px 0;
-            font-weight: bold;
-            color: var(--secondary-color);
-            font-size: 1.2em;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            margin: 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .btn:hover {
-            background: var(--secondary-color);
-            box-shadow: 0 0 20px rgba(80,200,120,0.5);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <!-- Задаём масштабирование под устройство, запрещаем масштабирование вручную -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Мастер крестиков-ноликов</title>
+  <style>
+    /* Сброс отступов и базовые стили */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+    /* Темы через CSS-переменные */
+    body.light  { --bg-color: #fff; --text-color: #000; --cell-bg: #e0e0e0; --cell-border: #bbb; }
+    body.dark   { --bg-color: #2b2b2b; --text-color: #f1f1f1; --cell-bg: #3c3c3c; --cell-border: #555; }
+    body.dark-amoled { --bg-color: #000; --text-color: #f1f1f1; --cell-bg: #121212; --cell-border: #333; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: Arial, sans-serif;
+    }
+    /* Контейнер игры, занимающий весь экран */
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    /* Игровое поле (3х3) с использованием CSS Grid */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 5px;
+      /* Размер поля зависит от меньшей стороны экрана */
+      width: 90vmin;
+      height: 90vmin;
+    }
+    .cell {
+      background-color: var(--cell-bg);
+      border: 2px solid var(--cell-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8vmin;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .cell:hover { transform: scale(1.05); }
+    
+    /* Модальное окно меню */
+    #menuModal {
+      position: absolute;
+      top: 10%;
+      right: 10%;
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 2px solid var(--cell-border);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      max-width: 300px;
+      z-index: 10;
+    }
+    #menuModal h2 { margin-top: 0; }
+    #menuModal label { display: block; margin: 10px 0 5px; }
+    #menuModal input[type="number"] { width: 100%; padding: 5px; }
+    #menuModal small { display: block; margin-top: 5px; font-size: 0.85em; }
+    #closeMenu { margin-top: 10px; cursor: pointer; color: var(--text-color); text-decoration: underline; }
+    
+    /* Кнопка открытия меню */
+    #openMenuBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px 15px;
+      background: var(--cell-bg);
+      border: 2px solid var(--cell-border);
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10;
+      transition: background-color 0.3s;
+    }
+    #openMenuBtn:hover { background: var(--cell-border); }
+  </style>
 </head>
-<body>
-    <!-- Приветственный экран -->
-    <div id="welcome-screen">
-        <div id="welcome-logo">Tic Tac Toe Master</div>
-        <div id="developer-name">Fuitec Software</div>
+<body class="light">
+  <div id="game-container">
+    <!-- Кнопка вызова меню -->
+    <div id="openMenuBtn">Настройки</div>
+    
+    <!-- Модальное окно настроек -->
+    <div id="menuModal" style="display:none;">
+      <h2>Настройки</h2>
+      <div>
+        <label>Тема сайта:</label>
+        <input type="radio" name="theme" value="light" checked> Светлая<br>
+        <input type="radio" name="theme" value="dark"> Тёмная<br>
+        <input type="radio" name="theme" value="dark-amoled"> Тёмная AMOLED<br>
+      </div>
+      <div>
+        <label>Режим сложности машинных игроков:</label>
+        <input type="radio" name="machineDifficulty" value="easy" checked> Лёгкий<br>
+        <input type="radio" name="machineDifficulty" value="medium"> Средняя<br>
+        <input type="radio" name="machineDifficulty" value="hard"> Сложный<br>
+      </div>
+      <div>
+        <label>Сложность ИИ (0.1 – 1.0):</label>
+        <input type="number" id="aiDifficulty" min="0.1" max="1.0" step="0.01" value="0.5">
+        <small>Введите значение: 0.1 – лёгкая, 1.0 – сложная</small>
+      </div>
+      <div id="closeMenu">Закрыть</div>
     </div>
-
-    <div class="game-container">
-        <div class="mode-selector">
-            <button class="mode-btn active" onclick="setGameMode('ai')">vs AI</button>
-            <button class="mode-btn" onclick="setGameMode('local')">2 Players</button>
-        </div>
-        <h1>Tic Tac Toe Master</h1>
-        <div id="status">Выберите режим игры</div>
-        <div class="game-board" id="board"></div>
-        <button class="btn" onclick="resetGame()">Новая игра</button>
+    
+    <!-- Игровое поле -->
+    <div id="board">
+      <div class="cell" data-index="0"></div>
+      <div class="cell" data-index="1"></div>
+      <div class="cell" data-index="2"></div>
+      <div class="cell" data-index="3"></div>
+      <div class="cell" data-index="4"></div>
+      <div class="cell" data-index="5"></div>
+      <div class="cell" data-index="6"></div>
+      <div class="cell" data-index="7"></div>
+      <div class="cell" data-index="8"></div>
     </div>
-
-    <script>
-            // Скрытие приветственного экрана
-        document.addEventListener('DOMContentLoaded', () => {
-            const welcomeScreen = document.getElementById('welcome-screen');
-            setTimeout(() => {
-                welcomeScreen.classList.add('hidden');
-            }, 3000);
-        });
-
-        class TicTacToe {
-            constructor(mode = 'ai') {
-                this.board = Array(9).fill(null);
-                this.currentPlayer = 'X';
-                this.gameOver = false;
-                this.mode = mode;
-                this.renderBoard();
-            }
-
-            renderBoard() {
-                const boardElement = document.getElementById('board');
-                boardElement.innerHTML = '';
-                this.board.forEach((cell, index) => {
-                    const cellElement = document.createElement('div');
-                    cellElement.classList.add('cell');
-                    cellElement.textContent = cell || '';
-                    cellElement.dataset.index = index;
-                    cellElement.addEventListener('click', () => this.makeMove(index));
-                    boardElement.appendChild(cellElement);
-                });
-            }
-
-            makeMove(index) {
-                if (this.board[index] || this.gameOver) return;
-
-                this.board[index] = this.currentPlayer;
-                this.renderBoard();
-
-                if (this.checkWinner()) {
-                    this.handleWin();
-                    return;
-                }
-
-                if (this.board.every(cell => cell !== null)) {
-                    this.handleDraw();
-                    return;
-                }
-
-                this.switchPlayer();
-            }
-
-            switchPlayer() {
-                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-                
-                if (this.mode === 'ai' && this.currentPlayer === 'O') {
-                    setTimeout(() => this.aiMove(), 500);
-                }
-
-                this.updateStatus();
-            }
-
-            handleWin() {
-                const winningPlayer = this.currentPlayer;
-                document.getElementById('status').textContent = `${winningPlayer} победил!`;
-                this.gameOver = true;
-                this.highlightWinningCells();
-                this.celebrateWin();
-                this.saveGameStats(winningPlayer);
-            }
-
-            handleDraw() {
-                document.getElementById('status').textContent = 'Ничья!';
-                this.gameOver = true;
-                this.saveGameStats('draw');
-            }
-
-            highlightWinningCells() {
-                const winPatterns = [
-                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Строки
-                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Столбцы
-                    [0, 4, 8], [2, 4, 6] // Диагонали
-                ];
-
-                for (let pattern of winPatterns) {
-                    const [a, b, c] = pattern;
-                    if (this.board[a] && 
-                        this.board[a] === this.board[b] && 
-                        this.board[a] === this.board[c]) {
-                        
-                        pattern.forEach(index => {
-                            const cell = document.querySelector(`.cell[data-index="${index}"]`);
-                            cell.classList.add('winner');
-                        });
-                        break;
-                    }
-                }
-            }
-
-            aiMove() {
-                const availableMoves = this.board.reduce((acc, cell, index) => {
-                    if (cell === null) acc.push(index);
-                    return acc;
-                }, []);
-
-                const bestMove = this.findBestMove(availableMoves);
-                this.makeMove(bestMove);
-            }
-
-            findBestMove(availableMoves) {
-                // Улучшенный алгоритм выбора хода с минимаксом
-                const testMove = (move, player) => {
-                    this.board[move] = player;
-                    const isWinner = this.checkWinnerForPlayer(player);
-                    this.board[move] = null;
-                    return isWinner;
-                };
-
-                // Попытка выиграть
-                for (let move of availableMoves) {
-                    if (testMove(move, 'O')) return move;
-                }
-
-                // Блокировка победы противника
-                for (let move of availableMoves) {
-                    if (testMove(move, 'X')) return move;
-                }
-
-                // Выбор центра, если возможно
-                if (availableMoves.includes(4)) return 4;
-
-                // Случайный ход
-                return availableMoves[Math.floor(Math.random() * availableMoves.length)];
-            }
-
-            checkWinnerForPlayer(player) {
-                const winPatterns = [
-                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Строки
-                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Столбцы
-                    [0, 4, 8], [2, 4, 6] // Диагонали
-                ];
-
-                return winPatterns.some(pattern => 
-                    pattern.every(index => this.board[index] === player)
-                );
-            }
-
-            checkWinner() {
-                return this.checkWinnerForPlayer(this.currentPlayer);
-            }
-
-            updateStatus() {
-                const statusElement = document.getElementById('status');
-                if (this.mode === 'local') {
-                    statusElement.textContent = `Ход игрока ${this.currentPlayer}`;
-                } else if (this.mode === 'ai' && this.currentPlayer === 'O') {
-                    statusElement.textContent = 'Ход компьютера';
-                } else {
-                    statusElement.textContent = 'Ваш ход';
-                }
-            }
-
-            celebrateWin() {
-                this.createFireworkAnimation();
-                this.playWinSound();
-            }
-
-            createFireworkAnimation() {
-                const canvas = document.createElement('canvas');
-                canvas.style.position = 'fixed';
-                canvas.style.top = '0';
-                canvas.style.left = '0';
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                canvas.style.pointerEvents = 'none';
-                canvas.style.zIndex = '1000';
-                document.body.appendChild(canvas);
-
-                const ctx = canvas.getContext('2d');
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-
-                const particles = [];
-
-                function createParticles(x, y) {
-                    const particleCount = 50;
-                    for (let i = 0; i < particleCount; i++) {
-                        particles.push({
-                            x: x,
-                            y: y,
-                            radius: Math.random() * 5 + 2,
-                            color: `hsl(${Math.random() * 360}, 50%, 50%)`,
-                            speedX: (Math.random() - 0.5) * 10,
-                            speedY: (Math.random() - 0.5) * 10,
-                            alpha: 1
-                        });
-                    }
-                }
-
-                function animateParticles() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                    particles.forEach((particle, index) => {
-                        particle.x += particle.speedX;
-                        particle.y += particle.speedY;
-                        particle.alpha -= 0.02;
-
-                        ctx.beginPath();
-                        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
-                        ctx.fill();
-
-                                               if (particle.alpha <= 0) {
-                            particles.splice(index, 1);
-                        }
-                    });
-
-                    if (particles.length > 0) {
-                        requestAnimationFrame(animateParticles);
-                    } else {
-                        document.body.removeChild(canvas);
-                    }
-                }
-
-                createParticles(window.innerWidth / 2, window.innerHeight / 2);
-                animateParticles();
-            }
-
-            playWinSound() {
-                try {
-                    const audio = new Audio('win-sound.mp3');
-                    audio.play().catch(error => {
-                        console.warn('Не удалось воспроизвести звук:', error);
-                    });
-                } catch (error) {
-                    console.warn('Ошибка создания аудио:', error);
-                }
-            }
-
-            saveGameStats(result) {
-                try {
-                    const stats = JSON.parse(localStorage.getItem('ticTacToeStats') || '{}');
-                    stats[result] = (stats[result] || 0) + 1;
-                    localStorage.setItem('ticTacToeStats', JSON.stringify(stats));
-                } catch (error) {
-                    console.warn('Ошибка сохранения статистики:', error);
-                }
-            }
+  </div>
+  
+  <script>
+    // Основные переменные игры
+    const boardElem = document.getElementById('board');
+    let board = Array(9).fill(null);
+    let currentPlayer = 'X'; // Игрок играет за "X"
+    let gameOver = false;
+    
+    // Настройки
+    let theme = 'light';
+    let machineDifficulty = 'easy'; // Возможные значения: easy, medium, hard
+    let aiDifficulty = parseFloat(document.getElementById('aiDifficulty').value);
+    
+    // Работа с модальным окном меню
+    const menuModal = document.getElementById('menuModal');
+    document.getElementById('openMenuBtn').addEventListener('click', () => {
+      menuModal.style.display = 'block';
+    });
+    document.getElementById('closeMenu').addEventListener('click', () => {
+      menuModal.style.display = 'none';
+    });
+    
+    // Изменение темы
+    document.querySelectorAll('input[name="theme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        theme = e.target.value;
+        document.body.className = theme;
+      });
+    });
+    
+    // Выбор режима сложности машинных ходов
+    document.querySelectorAll('input[name="machineDifficulty"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        machineDifficulty = e.target.value;
+      });
+    });
+    
+    // Изменение числовой сложности ИИ
+    document.getElementById('aiDifficulty').addEventListener('change', (e) => {
+      let value = parseFloat(e.target.value);
+      if(value < 0.1) value = 0.1;
+      if(value > 1.0) value = 1.0;
+      aiDifficulty = value;
+    });
+    
+    // Возможные комбинации победы
+    const winCombinations = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    
+    function checkWinner(board, player) {
+      return winCombinations.some(comb => comb.every(index => board[index] === player));
+    }
+    
+    function isBoardFull(board) {
+      return board.every(cell => cell !== null);
+    }
+    
+    // Отрисовка игрового поля
+    function renderBoard() {
+      board.forEach((cell, i) => {
+        const cellElem = boardElem.querySelector(`.cell[data-index="${i}"]`);
+        cellElem.textContent = cell ? cell : '';
+        cellElem.style.pointerEvents = cell || gameOver ? 'none' : 'auto';
+      });
+    }
+    
+    renderBoard();
+    
+    // Обработка клика по ячейке
+    boardElem.addEventListener('click', function(e) {
+      if(gameOver) return;
+      if(e.target.classList.contains('cell')) {
+        const index = parseInt(e.target.getAttribute('data-index'));
+        if(!board[index]) {
+          board[index] = currentPlayer;
+          renderBoard();
+          if(checkWinner(board, currentPlayer)) {
+            alert('Вы победили!');
+            gameOver = true;
+            return;
+          }
+          if(isBoardFull(board)) {
+            alert('Ничья!');
+            gameOver = true;
+            return;
+          }
+          // Ход ИИ с задержкой для плавности анимации
+          setTimeout(aiMove, 300);
         }
-
-        let game;
-
-        function setGameMode(mode) {
-            const buttons = document.querySelectorAll('.mode-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            resetGame(mode);
+      }
+    });
+    
+    // Логика хода ИИ
+    function aiMove() {
+      // Находим свободные ячейки
+      let available = board.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
+      if(available.length === 0) return;
+      
+      // В зависимости от настройки сложности ИИ выбираем оптимальный или случайный ход.
+      // Чем выше значение aiDifficulty, тем с большей вероятностью ИИ выбирает оптимальный ход.
+      let playOptimal = Math.random() < aiDifficulty;
+      let move;
+      if(playOptimal) {
+        move = findBestMove();
+      } else {
+        move = available[Math.floor(Math.random() * available.length)];
+      }
+      board[move] = 'O';
+      renderBoard();
+      if(checkWinner(board, 'O')) {
+        alert('ИИ победил!');
+        gameOver = true;
+        return;
+      }
+      if(isBoardFull(board)) {
+        alert('Ничья!');
+        gameOver = true;
+        return;
+      }
+    }
+    
+    // Простейшая реализация оптимального хода через алгоритм minimax
+    function findBestMove() {
+      let bestScore = -Infinity;
+      let move = null;
+      for(let i = 0; i < board.length; i++){
+        if(board[i] === null){
+          board[i] = 'O';
+          let score = minimax(board, 0, false);
+          board[i] = null;
+          if(score > bestScore){
+            bestScore = score;
+            move = i;
+          }
         }
-
-        function resetGame(mode = 'ai') {
-            game = new TicTacToe(mode);
-            const statusElement = document.getElementById('status');
-            
-            if (mode === 'ai') {
-                statusElement.textContent = 'Ваш ход против ИИ';
-            } else {
-                statusElement.textContent = 'Ход игрока X';
-            }
+      }
+      if(move === null) {
+        let available = board.map((val, idx) => val === null ? idx : null).filter(val => val !== null);
+        move = available[Math.floor(Math.random() * available.length)];
+      }
+      return move;
+    }
+    
+    function minimax(newBoard, depth, isMaximizing) {
+      if(checkWinner(newBoard, 'O')) return 10 - depth;
+      if(checkWinner(newBoard, 'X')) return depth - 10;
+      if(isBoardFull(newBoard)) return 0;
+      
+      if(isMaximizing){
+        let bestScore = -Infinity;
+        for(let i = 0; i < newBoard.length; i++){
+          if(newBoard[i] === null){
+            newBoard[i] = 'O';
+            let score = minimax(newBoard, depth + 1, false);
+            newBoard[i] = null;
+            bestScore = Math.max(score, bestScore);
+          }
         }
-
-        // Обработка клавиш
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'r' || e.key === 'R') {
-                resetGame(game ? game.mode : 'ai');
-            }
-        });
-
-        // Инициализация игры при загрузке страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            const welcomeScreen = document.getElementById('welcome-screen');
-            
-            // Анимация исчезания приветственного экрана
-            setTimeout(() => {
-                welcomeScreen.classList.add('hidden');
-                
-                // Инициализация игры после исчезания экрана
-                setTimeout(() => {
-                    resetGame('ai');
-                }, 1000);
-            }, 3000);
-
-            // Добавляем обработчик изменения размера окна для адаптивности
-            window.addEventListener('resize', () => {
-                if (game) {
-                    game.renderBoard();
-                }
-            });
-        });
-
-        // Функция для отображения статистики игр
-        function showGameStats() {
-            try {
-                const stats = JSON.parse(localStorage.getItem('ticTacToeStats') || '{}');
-                const statsModal = document.createElement('div');
-                statsModal.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(30, 32, 64, 0.9);
-                    padding: 20px;
-                    border-radius: 20px;
-                    z-index: 1000;
-                    text-align: center;
-                    backdrop-filter: blur(10px);
-                `;
-
-                statsModal.innerHTML = `
-                    <h2>Статистика игр</h2>
-                    <p>Победы X: ${stats['X'] || 0}</p>
-                    <p>Победы O: ${stats['O'] || 0}</p>
-                    <p>Ничьи: ${stats['draw'] || 0}</p>
-                    <button onclick="this.parentElement.remove()">Закрыть</button>
-                `;
-
-                document.body.appendChild(statsModal);
-            } catch (error) {
-                console.warn('Ошибка отображения статистики:', error);
-            }
+        return bestScore;
+      } else {
+        let bestScore = Infinity;
+        for(let i = 0; i < newBoard.length; i++){
+          if(newBoard[i] === null){
+            newBoard[i] = 'X';
+            let score = minimax(newBoard, depth + 1, true);
+            newBoard[i] = null;
+            bestScore = Math.min(score, bestScore);
+          }
         }
-    </script>
+        return bestScore;
+      }
+    }
+    
+    // Для демонстрации: после окончания игры клик по полю сбрасывает игру
+    boardElem.addEventListener('click', function(e) {
+      if(gameOver && e.target.classList.contains('cell')) {
+        board = Array(9).fill(null);
+        gameOver = false;
+        currentPlayer = 'X';
+        renderBoard();
+      }
+    });
+  </script>
 </body>
 </html>
